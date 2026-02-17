@@ -1,48 +1,77 @@
-import React, { useEffect, useRef } from 'react';
-import { createChart, ColorType, CandlestickSeries } from 'lightweight-charts';
-import { useStockStore } from '../store/stockStore'; // Import your store
+import React, { useEffect, useRef, useState } from 'react';
+import { createChart, ColorType, AreaSeries } from 'lightweight-charts'; // 1. Import AreaSeries
+import { useStockStore } from '../store/stockStore';
 
 export default function CandleChart({ symbol }) {
   const chartContainerRef = useRef();
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // SDE 2 Pattern: Subscribe to the store that is already being updated by the Dashboard
   const livePrice = useStockStore((state) => state.coins[symbol]?.price);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
-    // Initialize Chart
+    // 1. Setup Chart
     const chart = createChart(chartContainerRef.current, {
-      layout: { background: { type: ColorType.Solid, color: 'transparent' }, textColor: '#d1d5db' },
-      grid: { vertLines: { color: 'rgba(51, 65, 85, 0.2)' }, horzLines: { color: 'rgba(51, 65, 85, 0.2)' } },
+      layout: { 
+        background: { type: ColorType.Solid, color: 'transparent' }, 
+        textColor: '#9ca3af', 
+        attributionLogo: false 
+      },
+      grid: { 
+        vertLines: { visible: false }, 
+        horzLines: { color: 'rgba(255, 255, 255, 0.05)' } 
+      },
       width: chartContainerRef.current.offsetWidth,
       height: 400,
-      timeScale: { timeVisible: true },
+      timeScale: { 
+        timeVisible: true, 
+        secondsVisible: false,
+        borderVisible: false 
+      },
+      rightPriceScale: {
+        borderVisible: false,
+      },
+      crosshair: {
+        vertLine: {
+          labelBackgroundColor: '#f97316', 
+        },
+        horzLine: {
+          labelBackgroundColor: '#f97316',
+        }
+      }
     });
     chartRef.current = chart;
 
-    // Correct API for v5: addSeries(CandlestickSeries)
-    const candleSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#22c55e', downColor: '#ef4444', borderVisible: false,
-      wickUpColor: '#22c55e', wickDownColor: '#ef4444',
+    // 2. Correct Method for v5: addSeries(AreaSeries, options)
+    const areaSeries = chart.addSeries(AreaSeries, {
+      topColor: 'rgba(249, 115, 22, 0.56)', 
+      bottomColor: 'rgba(249, 115, 22, 0.0)', 
+      lineColor: '#f97316', 
+      lineWidth: 2,
     });
-    seriesRef.current = candleSeries;
+    seriesRef.current = areaSeries;
 
-    // Fetch actual historical data so the chart isn't empty
+    // 3. Fetch History
     const fetchHistory = async () => {
       try {
-        // Use api.binance.us to match your location and main.py configuration
-const res = await fetch(`https://api.binance.us/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=1m&limit=100`);
+        const res = await fetch(`https://api.binance.us/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=1m&limit=100`);
         const data = await res.json();
+        
         const formatted = data.map(d => ({
           time: d[0] / 1000,
-          open: parseFloat(d[1]), high: parseFloat(d[2]),
-          low: parseFloat(d[3]), close: parseFloat(d[4])
+          value: parseFloat(d[4]) 
         }));
-        candleSeries.setData(formatted);
-      } catch (err) { console.error("History fetch error:", err); }
+        
+        areaSeries.setData(formatted);
+        chart.timeScale().fitContent();
+        setIsLoading(false);
+      } catch (err) { 
+        console.error("History fetch error:", err);
+        setIsLoading(false);
+      }
     };
 
     fetchHistory();
@@ -58,16 +87,27 @@ const res = await fetch(`https://api.binance.us/api/v3/klines?symbol=${symbol.to
     };
   }, [symbol]);
 
-  // SDE 2 Tip: Reactively update the chart whenever the store's price changes
+  // 4. Live Updates
   useEffect(() => {
     if (livePrice && seriesRef.current) {
       const price = parseFloat(livePrice);
+      const currentTime = Math.floor(Date.now() / 1000);
+
       seriesRef.current.update({
-        time: Math.floor(Date.now() / 1000),
-        open: price, high: price, low: price, close: price,
+        time: currentTime,
+        value: price,
       });
     }
   }, [livePrice]);
 
-  return <div ref={chartContainerRef} className="w-full h-[400px]" />;
+  return (
+    <div className="relative w-full h-[400px]">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-900/50 backdrop-blur-sm">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+        </div>
+      )}
+      <div ref={chartContainerRef} className="w-full h-full" />
+    </div>
+  );
 }
