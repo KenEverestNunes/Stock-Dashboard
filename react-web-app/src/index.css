@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+  margin: 0;
+  /* A vibrant gradient background helps the glass effect stand out */
+  background: radial-gradient(circle at top left, #1e293b, #0f172a);
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Prevent layout shift when numbers change */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom Glass Effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}

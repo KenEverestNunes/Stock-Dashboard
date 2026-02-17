@@ -1,0 +1,68 @@
+/* src/App.css */
+
+.app-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Visualizing the "Drill" layers */
+.navbar {
+  margin-top: 20px;
+  border-radius: 12px;
+  background-color: rgba(100, 108, 255, 0.1);
+}
+
+.nav-items {
+  border-radius: 10px;
+  background-color: rgba(76, 175, 80, 0.1);
+}
+
+.profile-badge {
+  margin: 20px auto;
+  max-width: 300px;
+  border: 1px solid #555;
+  transition: transform 0.3s ease;
+}
+
+.profile-badge:hover {
+  transform: scale(1.05);
+  border-color: #646cff;
+}
+
+h1 {
+  color: #646cff;
+  font-size: 2.5rem;
+}
+
+h3 {
+  color: #aaa;
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+h4 {
+  margin: 0;
+  color: #fff;
+}
+
+p {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+button {
+  margin-top: 10px;
+  background-color: #1a1a1a;
+  color: white;
+  border: 1px solid #646cff;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #646cff;
+}
