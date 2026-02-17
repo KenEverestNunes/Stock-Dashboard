@@ -17,27 +17,25 @@ app.add_middleware(
 @app.websocket("/ws/stats")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    # Free Public Binance Stream for BTC/USDT
-    binance_uri = "wss://stream.binance.us:9443/ws/btcusdt@ticker"
+    
+    # 10 Coins to match your stockStore.js
+    coins = ["btc", "eth", "sol", "bnb", "ada", "dot", "pol", "doge", "link", "avax"]
+    streams = "/".join([f"{coin}usdt@ticker" for coin in coins])
+    
+    binance_uri = f"wss://stream.binance.us:9443/stream?streams={streams}"
     
     try:
         async with websockets.connect(binance_uri) as binance_ws:
             while True:
-                # 1. Listen to Binance
                 data = await binance_ws.recv()
                 msg = json.loads(data)
+                raw_data = msg['data']
                 
-                # 2. Extract only what we need (SDE 2 optimization)
                 payload = {
-                    "symbol": msg['s'],
-                    "price": msg['c'],     # 'c' = Current Price
-                    "change": msg['P']     # 'P' = Percentage Change (Uppercase P!)
+                    "symbol": raw_data['s'], 
+                    "price": raw_data['c'],
+                    "change": raw_data['P']
                 }
-                
-                # 3. Send to our React Frontend
                 await websocket.send_json(payload)
-                
-    except WebSocketDisconnect:
-        print("React Client disconnected")
     except Exception as e:
         print(f"Error: {e}")
